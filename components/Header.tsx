@@ -1,9 +1,10 @@
 interface HeaderProps {
   onRunQuery: () => void
   isLoading: boolean
+  onUploadClick?: () => void
 }
 
-export default function Header({ onRunQuery, isLoading }: HeaderProps) {
+export default function Header({ onRunQuery, isLoading, onUploadClick }: HeaderProps) {
   return (
     <header className="h-14 bg-[#1A1D21] flex items-center px-4 text-white shrink-0">
       {/* Logo + Project Name */}
@@ -43,6 +44,17 @@ export default function Header({ onRunQuery, isLoading }: HeaderProps) {
 
       {/* Actions */}
       <div className="ml-auto flex items-center gap-3">
+        {/* Upload Button */}
+        <button
+          onClick={onUploadClick}
+          className="px-3 py-1.5 text-sm text-gray-300 hover:text-white hover:bg-white/10 rounded transition-colors"
+        >
+          <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+          Upload
+        </button>
+
         {/* New Button */}
         <button className="px-3 py-1.5 text-sm text-gray-300 hover:text-white hover:bg-white/10 rounded transition-colors">
           <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -7,6 +7,7 @@ import ResultsPanel from '@/components/ResultsPanel'
 import SchemaPanel from '@/components/SchemaPanel'
 import TerminalBar from '@/components/TerminalBar'
 import Header from '@/components/Header'
+import UploadModal from '@/components/UploadModal'
 
 export type TabType = 'results' | 'lineage' | 'docs' | 'tools'
 export type FileType = 'sql' | 'yaml'
@@ -137,6 +138,7 @@ export default function AnalyticsPlatform() {
   const [tableSchema, setTableSchema] = useState<{ column: string; type: string }[]>([])
   const [lineage, setLineage] = useState<{ nodes: LineageNode[]; edges: LineageEdge[] } | null>(null)
   const [tableSizes, setTableSizes] = useState<TableSize[]>([])
+  const [showUploadModal, setShowUploadModal] = useState(false)
   const [terminalOutput, setTerminalOutput] = useState<string[]>(['> ren3 analytics platform v1.1.0', '> Connected to: ecommerce.db', '> MCP Tools: 16 available', '> Ready.'])
 
   useEffect(() => {
@@ -242,13 +244,22 @@ export default function AnalyticsPlatform() {
     setActiveTab('results')
   }
 
+  const handleUploadSuccess = (tableName: string, rows: number, columns: string[]) => {
+    setTerminalOutput(prev => [...prev, `> Uploaded ${rows} rows to table: ${tableName}`, `> Columns: ${columns.join(", ")}`])
+    // Refresh tables list
+    fetch("http://localhost:3001/api/tables").then(res => res.json()).then(data => setTables(data.tables || [])).catch(console.error)
+    fetch("http://localhost:3001/api/mcp/table-sizes").then(res => res.json()).then(data => setTableSizes(data.tables || [])).catch(console.error)
+    // Select the new table
+    setSelectedTable(tableName)
+  }
+
   const handleToolSelect = (tool: MCPTool) => {
     runMCPTool(tool.name)
   }
 
   return (
     <div className="h-screen flex flex-col bg-[#FAFBFC]">
-      <Header onRunQuery={handleRunQuery} isLoading={isLoading} />
+      <Header onRunQuery={handleRunQuery} isLoading={isLoading} onUploadClick={() => setShowUploadModal(true)} />
 
       {/* NL2SQL Input */}
       <div className="h-14 bg-white border-b px-4 flex items-center gap-3">
@@ -346,6 +357,7 @@ export default function AnalyticsPlatform() {
         </div>
         <SchemaPanel tableName={selectedTable} schema={tableSchema} />
       </div>
+      <UploadModal isOpen={showUploadModal} onClose={() => setShowUploadModal(false)} onUploadSuccess={handleUploadSuccess} />
       <TerminalBar expanded={terminalExpanded} onToggle={() => setTerminalExpanded(!terminalExpanded)} output={terminalOutput} />
     </div>
   )
