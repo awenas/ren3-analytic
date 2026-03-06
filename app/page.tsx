@@ -9,7 +9,7 @@ import TerminalBar from '@/components/TerminalBar'
 import Header from '@/components/Header'
 import UploadModal from '@/components/UploadModal'
 
-export type TabType = 'results' | 'lineage' | 'docs'
+export type TabType = 'results' | 'lineage' | 'docs' | 'tools'
 export type FileType = 'sql' | 'yaml'
 
 export interface QueryResult {
@@ -275,12 +275,24 @@ export default function AnalyticsPlatform() {
           <div className="h-10 bg-[#F4F5F7] flex items-center border-b px-4">
             <button className={`px-4 py-1 text-xs font-medium border-b-2 ${activeTab === 'results' ? 'border-[#6B4FBB] text-[#6B4FBB]' : 'border-transparent text-[#5E6C84]'}`} onClick={() => setActiveTab('results')}>Results</button>
             <button className={`px-4 py-1 text-xs font-medium border-b-2 ${activeTab === 'lineage' ? 'border-[#6B4FBB] text-[#6B4FBB]' : 'border-transparent text-[#5E6C84]'}`} onClick={() => setActiveTab('lineage')}>Lineage</button>
+            <button className={`px-4 py-1 text-xs font-medium border-b-2 ${activeTab === 'tools' ? 'border-[#6B4FBB] text-[#6B4FBB]' : 'border-transparent text-[#5E6C84]'}`} onClick={() => setActiveTab('tools')}>MCP Tools</button>
             <button className={`px-4 py-1 text-xs font-medium border-b-2 ${activeTab === 'docs' ? 'border-[#6B4FBB] text-[#6B4FBB]' : 'border-transparent text-[#5E6C84]'}`} onClick={() => setActiveTab('docs')}>{fileType === 'yaml' ? 'YAML' : 'Docs'}</button>
           </div>
           <div className="flex-1 overflow-hidden bg-white">
             {activeTab === 'results' && <ResultsPanel results={queryResults} isLoading={isLoading} />}
             {activeTab === 'lineage' && <ResultsPanel results={null} isLoading={false} lineage={lineage || undefined} />}
-            disabled={isLoading}
+            {activeTab === 'tools' && (
+              <div className="h-full overflow-auto bg-white p-4">
+                <div className="mb-4">
+                  <h3 className="text-sm font-semibold text-[#1A1D21] mb-1">MCP Tools</h3>
+                  <p className="text-xs text-[#5E6C84]">Click a tool to execute it against your database</p>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {MCP_TOOLS.map((tool) => (
+                    <button
+                      key={tool.name}
+                      onClick={() => handleToolSelect(tool)}
+                      disabled={isLoading}
                       className="flex flex-col items-start p-4 border border-gray-200 rounded-lg hover:border-[#6B4FBB] hover:bg-[#FAFBFC] transition-colors text-left"
                     >
                       <span className="text-xs font-medium text-[#6B4FBB] mb-1">{tool.name.replace(/_/g, ' ')}</span>
