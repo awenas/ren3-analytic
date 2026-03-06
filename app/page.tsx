@@ -259,7 +259,7 @@ export default function AnalyticsPlatform() {
 
   return (
     <div className="h-screen flex flex-col bg-[#FAFBFC]">
-      <Header onRunQuery={handleRunQuery} isLoading={isLoading} onUploadClick={() => setShowUploadModal(true)} />
+      <Header onRunQuery={handleRunQuery} isLoading={isLoading} onUploadClick={() => setShowUploadModal(true)} mcpTools={MCP_TOOLS} onMCPToolSelect={(toolName) => runMCPTool(toolName)} />
 
       {/* NL2SQL Input */}
       <div className="h-14 bg-white border-b px-4 flex items-center gap-3">

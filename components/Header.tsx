@@ -1,10 +1,23 @@
+'use client'
+
+import { useState } from 'react'
+
+interface MCPTool {
+  name: string
+  description: string
+}
+
 interface HeaderProps {
   onRunQuery: () => void
   isLoading: boolean
   onUploadClick?: () => void
+  mcpTools?: MCPTool[]
+  onMCPToolSelect?: (toolName: string) => void
 }
 
-export default function Header({ onRunQuery, isLoading, onUploadClick }: HeaderProps) {
+export default function Header({ onRunQuery, isLoading, onUploadClick, mcpTools = [], onMCPToolSelect }: HeaderProps) {
+  const [showToolsMenu, setShowToolsMenu] = useState(false)
+
   return (
     <header className="h-14 bg-[#1A1D21] flex items-center px-4 text-white shrink-0">
       {/* Logo + Project Name */}
@@ -41,6 +54,45 @@ export default function Header({ onRunQuery, isLoading, onUploadClick }: HeaderP
           </svg>
         </div>
       </div>
+
+      {/* MCP Tools Dropdown */}
+      {mcpTools.length > 0 && (
+        <div className="ml-6 relative">
+          <button
+            onClick={() => setShowToolsMenu(!showToolsMenu)}
+            className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-300 hover:text-white hover:bg-white/10 rounded transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+            </svg>
+            Tools
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {showToolsMenu && (
+            <div className="absolute top-full left-0 mt-1 w-64 bg-[#1A1D21] border border-gray-700 rounded-lg shadow-xl z-50">
+              <div className="p-2">
+                <div className="text-xs text-gray-400 px-2 py-1 uppercase tracking-wide">MCP Tools</div>
+                {mcpTools.map((tool) => (
+                  <button
+                    key={tool.name}
+                    onClick={() => {
+                      onMCPToolSelect?.(tool.name)
+                      setShowToolsMenu(false)
+                    }}
+                    className="w-full flex flex-col items-start px-3 py-2 text-sm text-gray-300 hover:bg-white/10 rounded transition-colors"
+                  >
+                    <span className="text-white">{tool.name.replace(/_/g, ' ')}</span>
+                    <span className="text-xs text-gray-500">{tool.description}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Actions */}
       <div className="ml-auto flex items-center gap-3">
