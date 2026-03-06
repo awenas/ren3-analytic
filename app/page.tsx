@@ -8,7 +8,7 @@ import SchemaPanel from '@/components/SchemaPanel'
 import TerminalBar from '@/components/TerminalBar'
 import Header from '@/components/Header'
 
-export type TabType = 'results' | 'lineage' | 'docs'
+export type TabType = 'results' | 'lineage' | 'docs' | 'tools'
 export type FileType = 'sql' | 'yaml'
 
 export interface QueryResult {
@@ -29,6 +29,27 @@ export interface LineageEdge {
   from: string
   to: string
 }
+
+export interface TableSize {
+  table: string
+  row_count: number
+  size_bytes: number
+}
+
+export interface MCPTool {
+  name: string
+  description: string
+}
+
+// MCP Tools available
+const MCP_TOOLS: MCPTool[] = [
+  { name: 'get_monthly_revenue', description: 'View monthly revenue trends' },
+  { name: 'get_customer_segments', description: 'Analyze customer segments' },
+  { name: 'get_product_performance', description: 'Top performing products' },
+  { name: 'get_table_sizes', description: 'Table row counts & sizes' },
+  { name: 'get_lineage', description: 'Data lineage graph' },
+  { name: 'get_metrics', description: 'Defined metrics' },
+]
 
 const TABLE_QUERIES: Record<string, string> = {
   orders: `SELECT DATE_TRUNC('month', order_date) AS month, COUNT(*) AS total_orders, SUM(order_total) AS revenue
@@ -115,10 +136,16 @@ export default function AnalyticsPlatform() {
   const [tables, setTables] = useState<string[]>([])
   const [tableSchema, setTableSchema] = useState<{ column: string; type: string }[]>([])
   const [lineage, setLineage] = useState<{ nodes: LineageNode[]; edges: LineageEdge[] } | null>(null)
-  const [terminalOutput, setTerminalOutput] = useState<string[]>(['> ren3 analytics platform v1.0.0', '> Connected to: ecommerce.db', '> Ready.'])
+  const [tableSizes, setTableSizes] = useState<TableSize[]>([])
+  const [terminalOutput, setTerminalOutput] = useState<string[]>(['> ren3 analytics platform v1.1.0', '> Connected to: ecommerce.db', '> MCP Tools: 16 available', '> Ready.'])
 
   useEffect(() => {
     fetch('http://localhost:3001/api/tables').then(res => res.json()).then(data => setTables(data.tables || [])).catch(console.error)
+  }, [])
+
+  useEffect(() => {
+    // Load table sizes using MCP tool
+    fetch('http://localhost:3001/api/mcp/table-sizes').then(res => res.json()).then(data => setTableSizes(data.tables || [])).catch(console.error)
   }, [])
 
   useEffect(() => {
@@ -130,7 +157,7 @@ export default function AnalyticsPlatform() {
   }, [selectedTable])
 
   useEffect(() => {
-    fetch('http://localhost:3001/api/lineage').then(res => res.json()).then(data => setLineage(data)).catch(console.error)
+    fetch('http://localhost:3001/api/mcp/lineage').then(res => res.json()).then(data => setLineage(data)).catch(console.error)
   }, [])
 
   const runTableQuery = async (sql: string) => {
@@ -144,6 +171,27 @@ export default function AnalyticsPlatform() {
       setTerminalOutput(prev => [...prev, '> Query executed successfully', `> Returned ${result.rowCount} rows`])
     } catch (error) {
       setTerminalOutput(prev => [...prev, `> Error: ${error instanceof Error ? error.message : 'Query failed'}`])
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const runMCPTool = async (toolName: string) => {
+    setIsLoading(true)
+    setTerminalOutput(prev => [...prev, `> Running MCP tool: ${toolName}`])
+    try {
+      const response = await fetch(`http://localhost:3001/api/mcp/${toolName}`)
+      if (!response.ok) throw new Error('MCP tool failed')
+      const result = await response.json()
+      setQueryResults({
+        columns: result.columns || Object.keys(result).filter(k => k !== 'table' && k !== 'stats' && k !== 'nodes' && k !== 'edges'),
+        data: result.rows || [result],
+        rowCount: result.rowCount || (result.rows ? result.rows.length : 1)
+      })
+      setTerminalOutput(prev => [...prev, `> ${toolName} completed`, `> Returned ${result.rowCount || 1} rows`])
+      setActiveTab('results')
+    } catch (error) {
+      setTerminalOutput(prev => [...prev, `> Error: ${error instanceof Error ? error.message : 'MCP tool failed'}`])
     } finally {
       setIsLoading(false)
     }
@@ -194,6 +242,10 @@ export default function AnalyticsPlatform() {
     setActiveTab('results')
   }
 
+  const handleToolSelect = (tool: MCPTool) => {
+    runMCPTool(tool.name)
+  }
+
   return (
     <div className="h-screen flex flex-col bg-[#FAFBFC]">
       <Header onRunQuery={handleRunQuery} isLoading={isLoading} />
@@ -206,17 +258,59 @@ export default function AnalyticsPlatform() {
       </div>
 
       <div className="flex-1 flex overflow-hidden">
-        <Sidebar selectedTable={selectedTable} onSelectTable={handleTableSelect} tables={tables} />
+        <Sidebar selectedTable={selectedTable} onSelectTable={handleTableSelect} tables={tables} tableSizes={tableSizes} />
         <div className="flex-1 flex flex-col min-w-0">
           <EditorPanel sql={currentSQL} onSQLChange={setCurrentSQL} fileName={currentFile} fileType={fileType} />
           <div className="h-10 bg-[#F4F5F7] flex items-center border-b px-4">
             <button className={`px-4 py-1 text-xs font-medium border-b-2 ${activeTab === 'results' ? 'border-[#6B4FBB] text-[#6B4FBB]' : 'border-transparent text-[#5E6C84]'}`} onClick={() => setActiveTab('results')}>Results</button>
             <button className={`px-4 py-1 text-xs font-medium border-b-2 ${activeTab === 'lineage' ? 'border-[#6B4FBB] text-[#6B4FBB]' : 'border-transparent text-[#5E6C84]'}`} onClick={() => setActiveTab('lineage')}>Lineage</button>
+            <button className={`px-4 py-1 text-xs font-medium border-b-2 ${activeTab === 'tools' ? 'border-[#6B4FBB] text-[#6B4FBB]' : 'border-transparent text-[#5E6C84]'}`} onClick={() => setActiveTab('tools')}>MCP Tools</button>
             <button className={`px-4 py-1 text-xs font-medium border-b-2 ${activeTab === 'docs' ? 'border-[#6B4FBB] text-[#6B4FBB]' : 'border-transparent text-[#5E6C84]'}`} onClick={() => setActiveTab('docs')}>{fileType === 'yaml' ? 'YAML' : 'Docs'}</button>
           </div>
           <div className="flex-1 overflow-hidden bg-white">
             {activeTab === 'results' && <ResultsPanel results={queryResults} isLoading={isLoading} />}
             {activeTab === 'lineage' && <ResultsPanel results={null} isLoading={false} lineage={lineage || undefined} />}
+            {activeTab === 'tools' && (
+              <div className="h-full overflow-auto bg-white p-4">
+                <div className="mb-4">
+                  <h3 className="text-sm font-semibold text-[#1A1D21] mb-1">MCP Tools</h3>
+                  <p className="text-xs text-[#5E6C84]">Click a tool to execute it against your database</p>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {MCP_TOOLS.map((tool) => (
+                    <button
+                      key={tool.name}
+                      onClick={() => handleToolSelect(tool)}
+                      disabled={isLoading}
+                      className="flex flex-col items-start p-4 border border-gray-200 rounded-lg hover:border-[#6B4FBB] hover:bg-[#FAFBFC] transition-colors text-left"
+                    >
+                      <span className="text-xs font-medium text-[#6B4FBB] mb-1">{tool.name.replace(/_/g, ' ')}</span>
+                      <span className="text-xs text-[#5E6C84]">{tool.description}</span>
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-6 p-4 bg-[#F4F5F7] rounded-lg">
+                  <h4 className="text-xs font-medium text-[#1A1D21] mb-2">Available Tools (16)</h4>
+                  <div className="grid grid-cols-3 gap-2 text-xs text-[#5E6C84]">
+                    <span>execute_query</span>
+                    <span>list_databases</span>
+                    <span>list_tables</span>
+                    <span>list_columns</span>
+                    <span>describe_table</span>
+                    <span>get_table_sample</span>
+                    <span>get_table_stats</span>
+                    <span>get_table_sizes</span>
+                    <span>list_views</span>
+                    <span>get_lineage</span>
+                    <span>get_metrics</span>
+                    <span>get_monthly_revenue</span>
+                    <span>get_customer_segments</span>
+                    <span>get_product_performance</span>
+                    <span>switch_database</span>
+                  </div>
+                </div>
+              </div>
+            )}
             {activeTab === 'docs' && (
               <div className="h-full overflow-auto bg-white p-4">
                 {fileType === 'yaml' ? (
@@ -235,7 +329,16 @@ export default function AnalyticsPlatform() {
                     )}
                   </div>
                 ) : (
-                  <div className="text-[#5E6C84]"><h3 className="text-lg font-semibold text-[#1A1D21] mb-4">Documentation</h3><p>Click on a metric file (.yml) in the sidebar to view and edit YAML content.</p></div>
+                  <div className="text-[#5E6C84]">
+                    <h3 className="text-lg font-semibold text-[#1A1D21] mb-4">Documentation</h3>
+                    <p className="mb-4">Click on a metric file (.yml) in the sidebar to view and edit YAML content.</p>
+                    <h4 className="text-sm font-medium text-[#1A1D21] mb-2">Quick Links</h4>
+                    <ul className="text-xs space-y-1">
+                      <li>• <a href="#" className="text-[#6B4FBB] hover:underline">SQL Syntax Guide</a></li>
+                      <li>• <a href="#" className="text-[#6B4FBB] hover:underline">dbt YAML Reference</a></li>
+                      <li>• <a href="#" className="text-[#6B4FBB] hover:underline">DuckDB Functions</a></li>
+                    </ul>
+                  </div>
                 )}
               </div>
             )}

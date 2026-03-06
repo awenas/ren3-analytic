@@ -6,6 +6,7 @@ interface SidebarProps {
   selectedTable: string | null
   onSelectTable: (table: string) => void
   tables?: string[]
+  tableSizes?: { table: string; row_count: number; size_bytes: number }[]
 }
 
 interface FileNode {
@@ -63,7 +64,7 @@ const fileTree: FileNode[] = [
   },
 ]
 
-export default function Sidebar({ selectedTable, onSelectTable, tables = [] }: SidebarProps) {
+export default function Sidebar({ selectedTable, onSelectTable, tables = [], tableSizes = [] }: SidebarProps) {
   const [expanded, setExpanded] = useState<string[]>(['models', 'metrics', 'tests', 'marts', 'staging'])
   const [selectedFile, setSelectedFile] = useState<string | null>('fct_orders.sql')
 
@@ -106,7 +107,6 @@ export default function Sidebar({ selectedTable, onSelectTable, tables = [] }: S
 
   const handleFileClick = (node: FileNode) => {
     setSelectedFile(node.name)
-    // Pass the full filename to parent - parent will handle sql tables and yaml files
     onSelectTable(node.name)
   }
 
@@ -145,6 +145,17 @@ export default function Sidebar({ selectedTable, onSelectTable, tables = [] }: S
     )
   }
 
+  const getTableRowCount = (tableName: string): number | null => {
+    const found = tableSizes.find(t => t.table === tableName)
+    return found ? found.row_count : null
+  }
+
+  const formatRowCount = (count: number): string => {
+    if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`
+    if (count >= 1000) return `${(count / 1000).toFixed(1)}K`
+    return count.toString()
+  }
+
   return (
     <div className="w-60 bg-[#F4F5F7] border-r flex flex-col shrink-0">
       {/* Header */}
@@ -166,28 +177,39 @@ export default function Sidebar({ selectedTable, onSelectTable, tables = [] }: S
 
       {/* Database Tables Section */}
       <div className="border-t">
-        <div className="p-3">
+        <div className="p-3 flex items-center justify-between">
           <span className="text-xs font-semibold text-[#5E6C84] uppercase tracking-wide">
             Tables
           </span>
+          <span className="text-xs text-[#5E6C84]">{tables.length}</span>
         </div>
         <div className="px-2 pb-2">
-          {(tables.length > 0 ? tables : ['orders', 'customers', 'products', 'order_items', 'campaigns']).map(table => (
-            <div
-              key={table}
-              onClick={() => onSelectTable(table)}
-              className={`flex items-center gap-2 py-1 px-2 cursor-pointer rounded transition-colors ${
-                selectedTable === table
-                  ? 'bg-[#6B4FBB] text-white'
-                  : 'hover:bg-gray-100 text-[#1A1D21]'
-              }`}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
-              </svg>
-              <span className="text-sm">{table}</span>
-            </div>
-          ))}
+          {(tables.length > 0 ? tables : ['orders', 'customers', 'products', 'order_items', 'campaigns']).map(table => {
+            const rowCount = getTableRowCount(table)
+            return (
+              <div
+                key={table}
+                onClick={() => onSelectTable(table)}
+                className={`flex items-center justify-between py-1 px-2 cursor-pointer rounded transition-colors ${
+                  selectedTable === table
+                    ? 'bg-[#6B4FBB] text-white'
+                    : 'hover:bg-gray-100 text-[#1A1D21]'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                  </svg>
+                  <span className="text-sm">{table}</span>
+                </div>
+                {rowCount !== null && (
+                  <span className={`text-xs ${selectedTable === table ? 'text-white/70' : 'text-[#5E6C84]'}`}>
+                    {formatRowCount(rowCount)}
+                  </span>
+                )}
+              </div>
+            )
+          })}
         </div>
       </div>
     </div>
