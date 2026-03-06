@@ -1,0 +1,140 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* ReN3 Brand */
+  --color-ren3-purple: #6B4FBB;
+  --color-ren3-purple-hover: #5A3FA8;
+  --color-ren3-dark: #1A1D21;
+
+  /* ReN3 Analytics palette */
+  --color-bg-primary: #FAFBFC;
+  --color-bg-secondary: #F4F5F7;
+  --color-bg-dark: #1A1D21;
+  --color-accent: #6B4FBB;
+  --color-accent-hover: #5A3FA8;
+
+  /* Text */
+  --color-text-primary: #1A1D21;
+  --color-text-secondary: #5E6C84;
+  --color-text-muted: #97A0AF;
+  --color-text-white: #FFFFFF;
+
+  /* Semantic */
+  --color-success: #00875A;
+  --color-warning: #FFAB00;
+  --color-error: #DE350B;
+  --color-info: #0052CC;
+
+  /* Node Colors (Lineage) */
+  --color-node-source: #6B7280;
+  --color-node-model: #0D9488;
+  --color-node-metric: #EAB308;
+  --color-node-test: #EF4444;
+
+  /* Syntax Highlighting */
+  --color-syntax-keyword: #CF222E;
+  --color-syntax-function: #8250DF;
+  --color-syntax-string: #0A3069;
+  --color-syntax-number: #0550AE;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #C1C7D0;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #A5ADBA;
+}
+
+/* Editor styles */
+.monaco-editor {
+  font-family: 'SF Mono', Monaco, 'Andale Mono', monospace !important;
+}
+
+/* Tab styles */
+.tab-active {
+  border-bottom: 2px solid var(--color-accent);
+  color: var(--color-accent);
+}
+
+/* File tree hover */
+.file-tree-item:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.file-tree-item.active {
+  background-color: var(--color-accent);
+  color: white;
+}
+
+/* Button styles */
+.btn-primary {
+  background: var(--color-accent);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+  background: var(--color-accent-hover);
+}
+
+.btn-secondary {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  border: 1px solid #DFE1E6;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.btn-success {
+  background: var(--color-success);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+/* Results table */
+.results-table th {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.results-table td {
+  border-bottom: 1px solid #EBECF0;
+  font-size: 14px;
+}
+
+.results-table tr:hover {
+  background: #F9FAFB;
+}
