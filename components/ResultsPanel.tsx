@@ -242,7 +242,7 @@ function LineageView({ lineage }: { lineage: { nodes: LineageNode[]; edges: Line
             if (!from || !to) return null
             return <line key={i} x1={from.x + nodeWidth} y1={from.y + nodeHeight/2} x2={to.x} y2={to.y + nodeHeight/2} stroke="#CBD5E1" strokeWidth={2} />
           })}
-          {lineage.nodes.map(node => (
+          {((lineage.nodes) || []).map(node => (
             <g key={node.id}>
               <rect x={node.x} y={node.y} width={nodeWidth} height={nodeHeight} rx={6} fill={nodeColors[node.type]} />
               <text x={node.x + nodeWidth/2} y={node.y + nodeHeight/2 + 4} textAnchor="middle" fill="white" fontSize={12}>{node.label}</text>
