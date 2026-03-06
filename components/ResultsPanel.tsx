@@ -236,7 +236,7 @@ function LineageView({ lineage }: { lineage: { nodes: LineageNode[]; edges: Line
       </div>
       <div className="flex-1 p-4 overflow-auto">
         <svg viewBox="0 0 800 220" className="w-full h-full">
-          {lineage.edges.map((edge, i) => {
+          {((lineage.edges) || []).map((edge, i) => {
             const from = lineage.nodes.find(n => n.id === edge.from)
             const to = lineage.nodes.find(n => n.id === edge.to)
             if (!from || !to) return null
